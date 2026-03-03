@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Lecturer Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+<div class="navbar"><h1>Lecturer Portal</h1></div>
+<div class="container">
+  <div class="card">
+    <button onclick="generateQR()">Generate Session QR</button>
+    <div id="qrcode" style="margin-top:20px; display:flex; justify-content:center;"></div>
+  </div>
+  <div class="card">
+    <h3>Attendance Sheet</h3>
+    <button onclick="viewAttendanceSheet()" style="background:#34495e;">Refresh List</button>
+    <button onclick="downloadCSV()" style="background:#27ae60;">Download Excel (CSV)</button>
+    <button onclick="clearRecords()" style="background:#e74c3c;">Clear All</button>
+    <table id="attendanceTable"></table>
+  </div>
+</div>
+<script src="lecturer.js"></script>
+</body>
+</html>

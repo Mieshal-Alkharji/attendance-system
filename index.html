@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SmartCheck | Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h2>System Login</h2>
+    <p>Please enter your credentials</p>
+    <div class="login-form">
+      <input type="text" id="loginName" placeholder="Full Name (e.g., Dr. Smith)" class="form-input">
+      <input type="text" id="loginID" placeholder="ID Number (e.g., admin)" class="form-input">
+      <button onclick="attemptLogin()">Login</button>
+    </div>
+    <p id="error-msg" style="color: red; margin-top: 10px;"></p>
+  </div>
+</div>
+<script src="auth.js"></script>
+</body>
+</html>

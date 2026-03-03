@@ -1,0 +1,50 @@
+body { font-family: sans-serif; background: #f0f2f5; margin: 0; }
+.navbar { background: #1a73e8; color: white; padding: 20px; text-align: center; }
+.container { max-width: 600px; margin: 30px auto; padding: 0 15px; }
+.card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; text-align: center; }
+.form-input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; }
+button { padding: 12px 20px; border: none; border-radius: 8px; color: white; background: #1a73e8; cursor: pointer; margin: 5px; font-weight: bold; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+th, td { border-bottom: 1px solid #eee; padding: 12px; text-align: left; }
+/* Add this to your existing style.css */
+@media (max-width: 600px) {
+    .container {
+        width: 95%;
+        margin-top: 10px;
+    }
+
+    .card {
+        padding: 15px;
+    }
+
+    .form-input {
+        width: 100%; /* Full width on phones */
+        box-sizing: border-box;
+    }
+
+    button {
+        width: 100%;
+        padding: 15px;
+    }
+}
+.login-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.form-input {
+    width: 100%;
+    max-width: 300px;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    outline: none;
+}
+
+.form-input:focus {
+    border-color: #1a73e8;
+    box-shadow: 0 0 5px rgba(26, 115, 232, 0.3);
+}

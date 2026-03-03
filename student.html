@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Portal</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+<div class="navbar"><h1>Student Portal</h1></div>
+<div class="container">
+  <div id="scanner-section" class="card">
+    <h3>Scan QR Code</h3>
+    <div id="reader"></div>
+  </div>
+  <div id="form-section" class="card" style="display:none;">
+    <h3>Enter Details</h3>
+    <input type="text" id="inputName" placeholder="Full Name" class="form-input"><br>
+    <input type="text" id="inputID" placeholder="ID Number" class="form-input"><br>
+    <button onclick="submitAttendance()">Submit</button>
+  </div>
+</div>
+<script src="student.js"></script>
+</body>
+</html>
