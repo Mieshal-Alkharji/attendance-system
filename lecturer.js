@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot, query, orderBy, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, query, orderBy, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBTwzS4-UbmvDKLeI4Kyv_tWvvOTVTF-ug",
@@ -11,16 +11,18 @@ const firebaseConfig = {
     measurementId: "G-8VBJE6LDTY"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 1. Real-Time Dashboard: Listen for student check-ins
+// 1. Live Dashboard Logic (Updates table automatically)
 window.addEventListener('load', () => {
-    const tableBody = document.getElementById("attendanceBody");
+    const tableBody = document.getElementById("attendanceBody") || document.getElementById("attendanceTable");
     const q = query(collection(db, "attendance"), orderBy("timestamp", "desc"));
 
     onSnapshot(q, (snapshot) => {
-        tableBody.innerHTML = ""; // Clear list
+        // Keeps the header and clears the rows
+        tableBody.innerHTML = `<tr><th>Name</th><th>ID</th><th>Time</th><th>Course</th></tr>`;
         snapshot.forEach((doc) => {
             const data = doc.data();
             tableBody.innerHTML += `
@@ -34,53 +36,46 @@ window.addEventListener('load', () => {
     });
 });
 
-// 2. Part C: QR Generation Logic
+// 2. QR Generation (Attached to window for HTML button)
 window.generateQR = function() {
     const qrDiv = document.getElementById("qrcode");
+    if (!qrDiv) return;
     qrDiv.innerHTML = "";
 
+    // Dynamic URL for GitHub/Live Hosting
     const baseUrl = window.location.origin + window.location.pathname.replace('lecturer.html', 'student.html');
+
     const sessionData = {
         course: "Advanced AI",
-        expires: Date.now() + 600000 // 10 minutes
+        expires: Date.now() + 600000
     };
 
     const finalUrl = `${baseUrl}?data=${encodeURIComponent(JSON.stringify(sessionData))}`;
 
-    new QRCode(qrDiv, {
-        text: finalUrl,
-        width: 220,
-        height: 220
-    });
-    console.log("QR Session Active:", finalUrl);
+    if (typeof QRCode !== "undefined") {
+        new QRCode(qrDiv, {
+            text: finalUrl,
+            width: 220,
+            height: 220
+        });
+        console.log("QR Link:", finalUrl);
+    } else {
+        alert("QR Library missing! Check lecturer.html script tags.");
+    }
 };
 
-// 3. Export to Excel (CSV)
+// 3. Download CSV Function
 window.downloadCSV = async function() {
     const querySnapshot = await getDocs(collection(db, "attendance"));
-    if (querySnapshot.empty) return alert("No data to export!");
-
-    let csvContent = "Name,ID,Time,Course\n";
-    querySnapshot.forEach((doc) => {
+    let csv = "Name,ID,Time,Course\n";
+    querySnapshot.forEach(doc => {
         const d = doc.data();
-        csvContent += `${d.name},${d.studentID},${d.time},${d.course}\n`;
+        csv += `${d.name},${d.studentID},${d.time},${d.course}\n`;
     });
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `Attendance_Report_${new Date().toLocaleDateString()}.csv`;
+    a.download = "Attendance_Report.csv";
     a.click();
-};
-
-// 4. Clear Database Records
-window.clearRecords = async function() {
-    if (confirm("Are you sure you want to delete all attendance records for today?")) {
-        const querySnapshot = await getDocs(collection(db, "attendance"));
-        querySnapshot.forEach(async (doc) => {
-            await deleteDoc(doc.ref);
-        });
-        alert("Database Cleared.");
-    }
 };
