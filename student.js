@@ -1,50 +1,61 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+// Your actual Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyBTwzS4-UbmvDKLeI4Kyv_tWvvOTVTF-ug",
+    authDomain: "attendancesystem-16e5c.firebaseapp.com",
+    projectId: "attendancesystem-16e5c",
+    storageBucket: "attendancesystem-16e5c.firebasestorage.app",
+    messagingSenderId: "33422610799",
+    appId: "1:33422610799:web:ba428fb6b648de9942189a",
+    measurementId: "G-8VBJE6LDTY"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 const html5QrCode = new Html5Qrcode("reader");
 let sessionInfo = null;
 
+// QR Scanner Logic
 html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-    sessionInfo = JSON.parse(text);
-    if (Date.now() > sessionInfo.expires) return alert("Expired!");
-    document.getElementById("scanner-section").style.display = "none";
-    document.getElementById("form-section").style.display = "block";
-    html5QrCode.stop();
+    try {
+        sessionInfo = JSON.parse(text);
+        document.getElementById("scanner-section").style.display = "none";
+        document.getElementById("form-section").style.display = "block";
+        html5QrCode.stop();
+    } catch (e) {
+        alert("Invalid QR Code Format");
+    }
 });
 
-function submitAttendance() {
+// The Cloud Submission Function
+window.submitAttendance = async function() {
     const name = document.getElementById("inputName").value;
     const id = document.getElementById("inputID").value;
-    const record = { name, id, time: new Date().toLocaleTimeString() };
 
-    let db = JSON.parse(localStorage.getItem("attendanceDB")) || [];
-    db.push(record);
-    localStorage.setItem("attendanceDB", JSON.stringify(db));
+    if (!name || !id) {
+        alert("Please enter both Name and ID");
+        return;
+    }
 
-    alert("Success! Form submitted.");
-    window.location.reload();
-}
-// Check if the page was opened via a QR link
-window.onload = function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const qrDataRaw = urlParams.get('data');
+    try {
+        // Pushes to Firebase 'attendance' collection
+        await addDoc(collection(db, "attendance"), {
+            name: name,
+            studentID: id,
+            course: sessionInfo ? sessionInfo.course : "General Class",
+            time: new Date().toLocaleTimeString(),
+            date: new Date().toLocaleDateString(),
+            timestamp: Date.now()
+        });
 
-    if (qrDataRaw) {
-        try {
-            const sessionInfo = JSON.parse(decodeURIComponent(qrDataRaw));
-
-            // Check if expired
-            if (Date.now() > sessionInfo.expires) {
-                alert("This session has expired. Please scan a new code.");
-                return;
-            }
-
-            // Successfully opened! Hide scanner and show form
-            document.getElementById("scanner-section").style.display = "none";
-            document.getElementById("form-section").style.display = "block";
-
-            console.log("Joined course:", sessionInfo.course);
-        } catch (e) {
-            console.error("Invalid QR Link Data");
-        }
+        alert("Success! Your attendance is now visible to the lecturer.");
+        window.location.reload();
+    } catch (e) {
+        console.error("Firebase Error: ", e);
+        alert("Submission failed. Check your Firebase Rules!");
     }
 };
-
-// ... keep your existing submitAttendance() function here ...
