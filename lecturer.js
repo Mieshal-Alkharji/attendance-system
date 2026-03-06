@@ -11,46 +11,47 @@ const firebaseConfig = {
     measurementId: "G-8VBJE6LDTY"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 1. Live Dashboard Logic (Updates table automatically)
+// 1. Live Dashboard Logic
 window.addEventListener('load', () => {
-    const tableBody = document.getElementById("attendanceBody") || document.getElementById("attendanceTable");
+    // Target the tbody specifically to avoid flickering headers
+    const tableBody = document.getElementById("attendanceBody");
     const q = query(collection(db, "attendance"), orderBy("timestamp", "desc"));
 
     onSnapshot(q, (snapshot) => {
-        // Keeps the header and clears the rows
-        tableBody.innerHTML = `<tr><th>Name</th><th>ID</th><th>Time</th><th>Course</th></tr>`;
+        if (!tableBody) return;
+        tableBody.innerHTML = ""; // Clear only the body
         snapshot.forEach((doc) => {
             const data = doc.data();
             tableBody.innerHTML += `
                 <tr>
-                    <td>${data.name}</td>
-                    <td>${data.studentID}</td>
-                    <td>${data.time}</td>
-                    <td>${data.course}</td>
+                    <td>${data.name || 'N/A'}</td>
+                    <td>${data.studentID || 'N/A'}</td>
+                    <td>${data.time || 'N/A'}</td>
+                    <td>${data.course || 'N/A'}</td>
                 </tr>`;
         });
     });
 });
 
-// 2. QR Generation (Attached to window for HTML button)
+// 2. QR Generation - THE CRITICAL FIX FOR YOUR PHONE
 window.generateQR = function() {
     const qrDiv = document.getElementById("qrcode");
     if (!qrDiv) return;
     qrDiv.innerHTML = "";
 
-    // Dynamic URL for GitHub/Live Hosting
-    const baseUrl = window.location.origin + window.location.pathname.replace('lecturer.html', 'student.html');
+    // REPLACE 'your-username' and 'your-repo' with your actual GitHub details
+    // Example: "https://mieshal.github.io/attendance-app/student.html"
+    const githubStudentUrl = "https://mieshal-alkharji.github.io/attendance-system//attendance-system/student.html";
 
     const sessionData = {
         course: "Advanced AI",
         expires: Date.now() + 600000
     };
 
-    const finalUrl = `${baseUrl}?data=${encodeURIComponent(JSON.stringify(sessionData))}`;
+    const finalUrl = `${githubStudentUrl}?data=${encodeURIComponent(JSON.stringify(sessionData))}`;
 
     if (typeof QRCode !== "undefined") {
         new QRCode(qrDiv, {
@@ -58,13 +59,13 @@ window.generateQR = function() {
             width: 220,
             height: 220
         });
-        console.log("QR Link:", finalUrl);
+        console.log("QR Pointing to:", finalUrl);
     } else {
-        alert("QR Library missing! Check lecturer.html script tags.");
+        alert("QR Library missing! Check your lecturer.html <script> tags.");
     }
 };
 
-// 3. Download CSV Function
+// 3. Download CSV
 window.downloadCSV = async function() {
     const querySnapshot = await getDocs(collection(db, "attendance"));
     let csv = "Name,ID,Time,Course\n";
@@ -78,4 +79,14 @@ window.downloadCSV = async function() {
     a.href = url;
     a.download = "Attendance_Report.csv";
     a.click();
+};
+
+// 4. Clear Records
+window.clearRecords = async function() {
+    if(confirm("Delete all attendance data?")) {
+        const querySnapshot = await getDocs(collection(db, "attendance"));
+        querySnapshot.forEach(async (docSnap) => {
+            await deleteDoc(docSnap.ref);
+        });
+    }
 };
