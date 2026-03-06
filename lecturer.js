@@ -44,7 +44,7 @@ window.generateQR = function() {
 
     // REPLACE 'your-username' and 'your-repo' with your actual GitHub details
     // Example: "https://mieshal.github.io/attendance-app/student.html"
-    const githubStudentUrl = "https://mieshal-alkharji.github.io/attendance-system//attendance-system/student.html";
+    const githubStudentUrl = "https://mieshal-alkharji.github.io/attendance-system/student.html";
 
     const sessionData = {
         course: "Advanced AI",
