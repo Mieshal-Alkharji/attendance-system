@@ -1,24 +1,79 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Student Portal</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Portal | SmartCheck</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    .input-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .input-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #34495e;
+    }
+    .styled-input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #bdc3c7;
+      border-radius: 8px;
+      font-size: 16px;
+      box-sizing: border-box; /* Critical for mobile width */
+    }
+    .styled-input:focus {
+      border-color: #3498db;
+      outline: none;
+    }
+    #form-section {
+      display: none;
+      animation: fadeIn 0.5s;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
 <body>
-<div class="navbar"><h1>Student Portal</h1></div>
+<div class="navbar">
+  <h1>Student Portal</h1>
+</div>
+
 <div class="container">
-  <div id="scanner-section" class="card">
-    <h3>Scan QR Code</h3>
-    <div id="reader"></div>
-  </div>
-  <div id="form-section" class="card" style="display:none;">
-    <h3>Enter Details</h3>
-    <input type="text" id="inputName" placeholder="Full Name" class="form-input"><br>
-    <input type="text" id="inputID" placeholder="ID Number" class="form-input"><br>
-    <button onclick="submitAttendance()">Submit</button>
+  <div class="card">
+    <div id="scanner-section">
+      <h3>Scan Class QR Code</h3>
+      <div id="reader" style="width: 100%; border-radius: 10px; overflow: hidden;"></div>
+      <p style="color: #7f8c8d; font-size: 0.9em; margin-top: 10px;">
+        Point your camera at the lecturer's screen.
+      </p>
+    </div>
+
+    <div id="form-section">
+      <h3 id="courseNameDisplay">Register Attendance</h3>
+
+      <div class="input-group">
+        <label for="inputName">Full Name</label>
+        <input type="text" id="inputName" class="styled-input" placeholder="Enter your name">
+      </div>
+
+      <div class="input-group">
+        <label for="inputID">Student ID Number</label>
+        <input type="number" id="inputID" class="styled-input" placeholder="e.g. 1122">
+      </div>
+
+      <button onclick="submitAttendance()" style="width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer;">
+        Submit Attendance
+      </button>
+    </div>
   </div>
 </div>
-<script src="student.js"></script>
+
+<script type="module" src="student.js"></script>
 </body>
 </html>
