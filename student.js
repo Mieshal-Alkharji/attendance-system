@@ -14,56 +14,45 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const html5QrCode = new Html5Qrcode("reader");
 let sessionInfo = null;
 
-// Start the Scanner automatically on load
-html5QrCode.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: 250 },
-    (decodedText) => {
+// On Load: Check the URL for data
+window.addEventListener('load', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const dataParam = urlParams.get('data');
+
+    if (dataParam) {
         try {
-            sessionInfo = JSON.parse(decodedText);
+            sessionInfo = JSON.parse(decodeURIComponent(dataParam));
 
-            // Stop camera and switch to Form
-            html5QrCode.stop().then(() => {
-                document.getElementById("scanner-section").style.display = "none";
-                document.getElementById("form-section").style.display = "block";
-
-                // Show the course name if available
-                if(sessionInfo.course) {
-                    document.getElementById("courseNameDisplay").innerText = "Attendance for: " + sessionInfo.course;
-                }
-            });
+            // Show the form, hide the "Scan" message
+            document.getElementById("scanner-section").style.display = "none";
+            document.getElementById("form-section").style.display = "block";
+            document.getElementById("courseDisplay").innerText = "Class: " + sessionInfo.course;
         } catch (e) {
-            alert("Error: Please scan the official Lecturer QR Code.");
+            console.error("URL Data Error", e);
         }
     }
-).catch(err => console.error("Scanner error:", err));
+});
 
-// Global function for the Submit button
 window.submitAttendance = async function() {
     const name = document.getElementById("inputName").value.trim();
     const id = document.getElementById("inputID").value.trim();
 
-    if (!name || !id) {
-        alert("Please fill in both fields.");
-        return;
-    }
+    if (!name || !id) return alert("Please enter Name and ID");
 
     try {
         await addDoc(collection(db, "attendance"), {
             name: name,
             studentID: id,
-            course: sessionInfo ? sessionInfo.course : "General Class",
+            course: sessionInfo ? sessionInfo.course : "General",
             time: new Date().toLocaleTimeString(),
             timestamp: Date.now()
         });
-
-        alert("Success! Your attendance has been recorded.");
-        window.location.reload(); // Returns to scanner for next student
+        alert("Attendance recorded!");
+        // Clear the URL and reset
+        window.location.href = "student.html";
     } catch (e) {
-        console.error("Submission error:", e);
-        alert("Submission failed. Check your internet connection.");
+        alert("Error: " + e.message);
     }
 };
