@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// Your actual Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBTwzS4-UbmvDKLeI4Kyv_tWvvOTVTF-ug",
     authDomain: "attendancesystem-16e5c.firebaseapp.com",
@@ -12,50 +11,59 @@ const firebaseConfig = {
     measurementId: "G-8VBJE6LDTY"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const html5QrCode = new Html5Qrcode("reader");
 let sessionInfo = null;
 
-// QR Scanner Logic
-html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-    try {
-        sessionInfo = JSON.parse(text);
-        document.getElementById("scanner-section").style.display = "none";
-        document.getElementById("form-section").style.display = "block";
-        html5QrCode.stop();
-    } catch (e) {
-        alert("Invalid QR Code Format");
-    }
-});
+// Start the Scanner automatically on load
+html5QrCode.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    (decodedText) => {
+        try {
+            sessionInfo = JSON.parse(decodedText);
 
-// The Cloud Submission Function
+            // Stop camera and switch to Form
+            html5QrCode.stop().then(() => {
+                document.getElementById("scanner-section").style.display = "none";
+                document.getElementById("form-section").style.display = "block";
+
+                // Show the course name if available
+                if(sessionInfo.course) {
+                    document.getElementById("courseNameDisplay").innerText = "Attendance for: " + sessionInfo.course;
+                }
+            });
+        } catch (e) {
+            alert("Error: Please scan the official Lecturer QR Code.");
+        }
+    }
+).catch(err => console.error("Scanner error:", err));
+
+// Global function for the Submit button
 window.submitAttendance = async function() {
-    const name = document.getElementById("inputName").value;
-    const id = document.getElementById("inputID").value;
+    const name = document.getElementById("inputName").value.trim();
+    const id = document.getElementById("inputID").value.trim();
 
     if (!name || !id) {
-        alert("Please enter both Name and ID");
+        alert("Please fill in both fields.");
         return;
     }
 
     try {
-        // Pushes to Firebase 'attendance' collection
         await addDoc(collection(db, "attendance"), {
             name: name,
             studentID: id,
             course: sessionInfo ? sessionInfo.course : "General Class",
             time: new Date().toLocaleTimeString(),
-            date: new Date().toLocaleDateString(),
             timestamp: Date.now()
         });
 
-        alert("Success! Your attendance is now visible to the lecturer.");
-        window.location.reload();
+        alert("Success! Your attendance has been recorded.");
+        window.location.reload(); // Returns to scanner for next student
     } catch (e) {
-        console.error("Firebase Error: ", e);
-        alert("Submission failed. Check your Firebase Rules!");
+        console.error("Submission error:", e);
+        alert("Submission failed. Check your internet connection.");
     }
 };
