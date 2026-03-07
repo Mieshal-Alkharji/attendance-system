@@ -16,13 +16,12 @@ const db = getFirestore(app);
 
 // 1. Live Dashboard Logic
 window.addEventListener('load', () => {
-    // Target the tbody specifically to avoid flickering headers
     const tableBody = document.getElementById("attendanceBody");
     const q = query(collection(db, "attendance"), orderBy("timestamp", "desc"));
 
     onSnapshot(q, (snapshot) => {
         if (!tableBody) return;
-        tableBody.innerHTML = ""; // Clear only the body
+        tableBody.innerHTML = "";
         snapshot.forEach((doc) => {
             const data = doc.data();
             tableBody.innerHTML += `
@@ -36,32 +35,35 @@ window.addEventListener('load', () => {
     });
 });
 
-// 2. QR Generation - THE CRITICAL FIX FOR YOUR PHONE
+// 2. QR Generation - URL Based
 window.generateQR = function() {
     const qrDiv = document.getElementById("qrcode");
     if (!qrDiv) return;
     qrDiv.innerHTML = "";
 
-    // REPLACE 'your-username' and 'your-repo' with your actual GitHub details
-    // Example: "https://mieshal.github.io/attendance-app/student.html"
+    // The live link to your student page
     const githubStudentUrl = "https://mieshal-alkharji.github.io/attendance-system/student.html";
 
+    // Data to pass to the student page
     const sessionData = {
         course: "Advanced AI",
-        expires: Date.now() + 600000
+        isAttendanceQR: true
     };
 
+    // This creates: https://.../student.html?data={"course":"Advanced AI"...}
     const finalUrl = `${githubStudentUrl}?data=${encodeURIComponent(JSON.stringify(sessionData))}`;
 
     if (typeof QRCode !== "undefined") {
         new QRCode(qrDiv, {
             text: finalUrl,
             width: 220,
-            height: 220
+            height: 220,
+            colorDark : "#2c3e50",
+            correctLevel : QRCode.CorrectLevel.H
         });
         console.log("QR Pointing to:", finalUrl);
     } else {
-        alert("QR Library missing! Check your lecturer.html <script> tags.");
+        alert("QR Library missing!");
     }
 };
 
@@ -85,8 +87,8 @@ window.downloadCSV = async function() {
 window.clearRecords = async function() {
     if(confirm("Delete all attendance data?")) {
         const querySnapshot = await getDocs(collection(db, "attendance"));
-        querySnapshot.forEach(async (docSnap) => {
+        for (const docSnap of querySnapshot.docs) {
             await deleteDoc(docSnap.ref);
-        });
+        }
     }
 };
