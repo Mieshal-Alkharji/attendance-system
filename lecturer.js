@@ -14,14 +14,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 1. Live Dashboard Logic
+// 1. Live Dashboard Logic - (Updated to remove Course column)
 window.addEventListener('load', () => {
     const tableBody = document.getElementById("attendanceBody");
     const q = query(collection(db, "attendance"), orderBy("timestamp", "desc"));
 
     onSnapshot(q, (snapshot) => {
         if (!tableBody) return;
-        tableBody.innerHTML = "";
+        tableBody.innerHTML = ""; // Clear the body
         snapshot.forEach((doc) => {
             const data = doc.data();
             tableBody.innerHTML += `
@@ -29,28 +29,24 @@ window.addEventListener('load', () => {
                     <td>${data.name || 'N/A'}</td>
                     <td>${data.studentID || 'N/A'}</td>
                     <td>${data.time || 'N/A'}</td>
-                    <td>${data.course || 'N/A'}</td>
-                </tr>`;
+                </tr>`; // Course data removed here
         });
     });
 });
 
-// 2. QR Generation - URL Based
+// 2. QR Generation - (Updated to remove Advanced AI data)
 window.generateQR = function() {
     const qrDiv = document.getElementById("qrcode");
     if (!qrDiv) return;
     qrDiv.innerHTML = "";
 
-    // The live link to your student page
     const githubStudentUrl = "https://mieshal-alkharji.github.io/attendance-system/student.html";
 
-    // Data to pass to the student page
+    // Only sending necessary flags to the student page
     const sessionData = {
-        course: "Advanced AI",
         isAttendanceQR: true
     };
 
-    // This creates: https://.../student.html?data={"course":"Advanced AI"...}
     const finalUrl = `${githubStudentUrl}?data=${encodeURIComponent(JSON.stringify(sessionData))}`;
 
     if (typeof QRCode !== "undefined") {
@@ -61,19 +57,19 @@ window.generateQR = function() {
             colorDark : "#2c3e50",
             correctLevel : QRCode.CorrectLevel.H
         });
-        console.log("QR Pointing to:", finalUrl);
+        console.log("QR Generated (Simplified)");
     } else {
         alert("QR Library missing!");
     }
 };
 
-// 3. Download CSV
+// 3. Download CSV - (Updated to remove Course column)
 window.downloadCSV = async function() {
     const querySnapshot = await getDocs(collection(db, "attendance"));
-    let csv = "Name,ID,Time,Course\n";
+    let csv = "Student Name,Student ID,Time\n"; // Header updated
     querySnapshot.forEach(doc => {
         const d = doc.data();
-        csv += `${d.name},${d.studentID},${d.time},${d.course}\n`;
+        csv += `${d.name},${d.studentID},${d.time}\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
