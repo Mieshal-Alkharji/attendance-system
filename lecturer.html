@@ -8,6 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
+
 <div class="navbar">
   <h1>Lecturer Portal</h1>
 </div>
@@ -15,29 +16,32 @@
 <div class="container">
   <div class="card">
     <h3>Generate Attendance QR</h3>
+    <p>Click the button below to show the QR code for students to scan.</p>
     <button onclick="generateQR()">Create New Session</button>
-    <div id="qrcode" style="margin-top:20px; display:flex; justify-content:center;"></div>
+    <div id="qrcode" style="margin-top:20px; display:flex; justify-content:center; padding: 10px; background: white; border-radius: 10px;"></div>
   </div>
 
   <div class="card">
     <h3>Live Attendance Sheet</h3>
-    <div style="margin-bottom: 15px; display: flex; gap: 10px; justify-content: center;">
+
+    <div style="margin-bottom: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
       <button onclick="downloadCSV()" style="background:#27ae60;">Download Excel (CSV)</button>
       <button onclick="clearRecords()" style="background:#e74c3c;">Clear All Records</button>
     </div>
 
-    <table>
-      <thead>
-      <tr>
-        <th>Student Name</th>
-        <th>Student ID</th>
-        <th>Time</th>
-        <th>Course</th>
-      </tr>
-      </thead>
-      <tbody id="attendanceBody">
-      </tbody>
-    </table>
+    <div style="overflow-x: auto;">
+      <table>
+        <thead>
+        <tr>
+          <th>Student Name</th>
+          <th>Student ID</th>
+          <th>Time</th>
+        </tr>
+        </thead>
+        <tbody id="attendanceBody">
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
