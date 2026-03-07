@@ -16,7 +16,7 @@ const db = getFirestore(app);
 
 let sessionInfo = null;
 
-// On Load: Check the URL for data
+// On Load: Check the URL for data from the QR scan
 window.addEventListener('load', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const dataParam = urlParams.get('data');
@@ -25,34 +25,47 @@ window.addEventListener('load', () => {
         try {
             sessionInfo = JSON.parse(decodeURIComponent(dataParam));
 
-            // Show the form, hide the "Scan" message
-            document.getElementById("scanner-section").style.display = "none";
-            document.getElementById("form-section").style.display = "block";
-            document.getElementById("courseDisplay").innerText = "Class: " + sessionInfo.course;
+            // Switch UI: Hide scanner message, show the input form
+            const scannerSection = document.getElementById("scanner-section");
+            const formSection = document.getElementById("form-section");
+
+            if (scannerSection) scannerSection.style.display = "none";
+            if (formSection) formSection.style.display = "block";
+
+            // Note: We are no longer displaying the Course Name here
         } catch (e) {
             console.error("URL Data Error", e);
         }
     }
 });
 
+// Submit Attendance Logic
 window.submitAttendance = async function() {
-    const name = document.getElementById("inputName").value.trim();
-    const id = document.getElementById("inputID").value.trim();
+    const nameField = document.getElementById("inputName");
+    const idField = document.getElementById("inputID");
 
-    if (!name || !id) return alert("Please enter Name and ID");
+    const name = nameField ? nameField.value.trim() : "";
+    const id = idField ? idField.value.trim() : "";
+
+    if (!name || !id) {
+        return alert("Please enter both your Name and Student ID");
+    }
 
     try {
+        // Only saving Name, ID, and Time as requested
         await addDoc(collection(db, "attendance"), {
             name: name,
             studentID: id,
-            course: sessionInfo ? sessionInfo.course : "General",
-            time: new Date().toLocaleTimeString(),
-            timestamp: Date.now()
+            time: new Date().toLocaleTimeString(), // Professional time format
+            timestamp: Date.now() // Used for sorting the dashboard
         });
-        alert("Attendance recorded!");
-        // Clear the URL and reset
+
+        alert("Attendance recorded successfully!");
+
+        // Redirect back to clean student page to prevent duplicate submissions
         window.location.href = "student.html";
     } catch (e) {
-        alert("Error: " + e.message);
+        console.error("Submission Error:", e);
+        alert("Error saving attendance: " + e.message);
     }
 };
