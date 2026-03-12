@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBTwzS4-UbmvDKLeI4Kyv_tWvvOTVTF-ug",
@@ -16,54 +16,59 @@ const db = getFirestore(app);
 
 let sessionInfo = null;
 
-// 1. ORIGINAL LOGIC: Handle the QR Scan URL on Page Load
 window.addEventListener('load', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const dataParam = urlParams.get('data');
-
     if (dataParam) {
         try {
             sessionInfo = JSON.parse(decodeURIComponent(dataParam));
-
             const scannerSection = document.getElementById("scanner-section");
             const formSection = document.getElementById("form-section");
-
             if (scannerSection) scannerSection.style.display = "none";
             if (formSection) formSection.style.display = "block";
-        } catch (e) {
-            console.error("URL Data Error", e);
-        }
+        } catch (e) { console.error("URL Data Error", e); }
     }
 });
 
-// 2. UPDATED LOGIC: Submit Attendance with Database Check
 window.submitAttendance = async function() {
-    // .trim() removes any accidental spaces at the start or end
-    const inputName = document.getElementById("inputName").value.trim();
-    const inputID = document.getElementById("inputID").value.trim();
+    const nameField = document.getElementById("inputName");
+    const idField = document.getElementById("inputID");
+
+    // Clean user input
+    const inputName = nameField.value.trim().toLowerCase();
+    const inputID = idField.value.trim();
 
     if (!inputName || !inputID) {
-        return alert("Please enter both your Name and Student ID");
+        return alert("Please enter both Name and ID");
     }
 
     try {
         const studentsRef = collection(db, "Auto-ID");
+        const querySnapshot = await getDocs(studentsRef);
 
-        // We search exactly for what is in the database
-        const q = query(studentsRef,
-            where("name", "==", inputName),
-            where("studentID", "==", inputID)
-        );
+        let matched = false;
 
-        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
 
-        if (querySnapshot.empty) {
-            // This triggers if capitalization or spacing is wrong
-            return alert("❌ Student not found. Check that you used CAPITAL letters correctly and no extra spaces.");
+            // SUPER CLEAN: Convert everything to a string, trim it, and lowercase it
+            const dbName = String(data.name || "").replace(/\s+/g, ' ').trim().toLowerCase();
+            const dbID = String(data.studentID || "").trim();
+
+            // Debugging console (Check your browser inspect tool if this fails)
+            console.log(`Checking: DB Name [${dbName}] against Input [${inputName}]`);
+
+            if (dbName === inputName && dbID === inputID) {
+                matched = true;
+            }
+        });
+
+        if (!matched) {
+            return alert("❌ Still not found. Please re-check the spelling in Firebase.");
         }
 
         await addDoc(collection(db, "attendance"), {
-            name: inputName,
+            name: nameField.value.trim(),
             studentID: inputID,
             time: new Date().toLocaleTimeString(),
             timestamp: Date.now()
@@ -71,7 +76,8 @@ window.submitAttendance = async function() {
 
         alert("✅ Success! Attendance recorded.");
         window.location.href = "student.html";
+
     } catch (e) {
-        alert("System error: " + e.message);
+        alert("Error: " + e.message);
     }
 };
