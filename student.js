@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBTwzS4-UbmvDKLeI4Kyv_tWvvOTVTF-ug",
@@ -16,7 +16,7 @@ const db = getFirestore(app);
 
 let sessionInfo = null;
 
-// On Load: Check the URL for data from the QR scan
+// 1. ORIGINAL LOGIC: Handle the QR Scan URL on Page Load
 window.addEventListener('load', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const dataParam = urlParams.get('data');
@@ -25,47 +25,58 @@ window.addEventListener('load', () => {
         try {
             sessionInfo = JSON.parse(decodeURIComponent(dataParam));
 
-            // Switch UI: Hide scanner message, show the input form
             const scannerSection = document.getElementById("scanner-section");
             const formSection = document.getElementById("form-section");
 
             if (scannerSection) scannerSection.style.display = "none";
             if (formSection) formSection.style.display = "block";
-
-            // Note: We are no longer displaying the Course Name here
         } catch (e) {
             console.error("URL Data Error", e);
         }
     }
 });
 
-// Submit Attendance Logic
+// 2. UPDATED LOGIC: Submit Attendance with Database Check
 window.submitAttendance = async function() {
     const nameField = document.getElementById("inputName");
     const idField = document.getElementById("inputID");
 
-    const name = nameField ? nameField.value.trim() : "";
-    const id = idField ? idField.value.trim() : "";
+    const inputName = nameField ? nameField.value.trim() : "";
+    const inputID = idField ? idField.value.trim() : "";
 
-    if (!name || !id) {
+    if (!inputName || !inputID) {
         return alert("Please enter both your Name and Student ID");
     }
 
     try {
-        // Only saving Name, ID, and Time as requested
+        // Search the "Auto-ID" collection for the student
+        const studentsRef = collection(db, "Auto-ID");
+        const q = query(studentsRef,
+            where("name", "==", inputName),
+            where("studentID", "==", inputID)
+        );
+
+        const querySnapshot = await getDocs(q);
+
+        // If no match is found in your database, show error
+        if (querySnapshot.empty) {
+            return alert("❌ Error: Student not found in the registered database. Please check your spelling and ID.");
+        }
+
+        // If verification passes, save the attendance record
         await addDoc(collection(db, "attendance"), {
-            name: name,
-            studentID: id,
-            time: new Date().toLocaleTimeString(), // Professional time format
-            timestamp: Date.now() // Used for sorting the dashboard
+            name: inputName,
+            studentID: inputID,
+            time: new Date().toLocaleTimeString(),
+            timestamp: Date.now()
         });
 
-        alert("Attendance recorded successfully!");
+        alert("✅ Attendance recorded successfully!");
 
-        // Redirect back to clean student page to prevent duplicate submissions
+        // Return to a clean page
         window.location.href = "student.html";
     } catch (e) {
-        console.error("Submission Error:", e);
-        alert("Error saving attendance: " + e.message);
+        console.error("Database Error:", e);
+        alert("Error verifying student: " + e.message);
     }
 };
