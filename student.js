@@ -38,19 +38,18 @@ window.addEventListener('load', () => {
 
 // 2. UPDATED LOGIC: Submit Attendance with Database Check
 window.submitAttendance = async function() {
-    const nameField = document.getElementById("inputName");
-    const idField = document.getElementById("inputID");
-
-    const inputName = nameField ? nameField.value.trim() : "";
-    const inputID = idField ? idField.value.trim() : "";
+    // .trim() removes any accidental spaces at the start or end
+    const inputName = document.getElementById("inputName").value.trim();
+    const inputID = document.getElementById("inputID").value.trim();
 
     if (!inputName || !inputID) {
         return alert("Please enter both your Name and Student ID");
     }
 
     try {
-        // Search the "Auto-ID" collection for the student
         const studentsRef = collection(db, "Auto-ID");
+
+        // We search exactly for what is in the database
         const q = query(studentsRef,
             where("name", "==", inputName),
             where("studentID", "==", inputID)
@@ -58,12 +57,11 @@ window.submitAttendance = async function() {
 
         const querySnapshot = await getDocs(q);
 
-        // If no match is found in your database, show error
         if (querySnapshot.empty) {
-            return alert("❌ Error: Student not found in the registered database. Please check your spelling and ID.");
+            // This triggers if capitalization or spacing is wrong
+            return alert("❌ Student not found. Check that you used CAPITAL letters correctly and no extra spaces.");
         }
 
-        // If verification passes, save the attendance record
         await addDoc(collection(db, "attendance"), {
             name: inputName,
             studentID: inputID,
@@ -71,12 +69,9 @@ window.submitAttendance = async function() {
             timestamp: Date.now()
         });
 
-        alert("✅ Attendance recorded successfully!");
-
-        // Return to a clean page
+        alert("✅ Success! Attendance recorded.");
         window.location.href = "student.html";
     } catch (e) {
-        console.error("Database Error:", e);
-        alert("Error verifying student: " + e.message);
+        alert("System error: " + e.message);
     }
 };
