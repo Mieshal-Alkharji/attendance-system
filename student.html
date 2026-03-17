@@ -41,13 +41,12 @@
       outline: none;
     }
 
-    /* Sections initially hidden */
+    /* CRITICAL: Hidden by default until JS triggers them */
     #form-section, #success-section {
       display: none;
       animation: fadeIn 0.5s ease-in-out;
     }
 
-    /* Success Section Specific Styling */
     .success-icon {
       font-size: 60px;
       color: #27ae60;
@@ -80,7 +79,7 @@
 
     <div id="scanner-section">
       <h3>Scan Class QR Code</h3>
-      <div id="reader" style="width: 100%; border-radius: 10px; overflow: hidden;"></div>
+      <div id="reader" style="width: 100%; border-radius: 10px; overflow: hidden; background: #f9f9f9;"></div>
       <p style="color: #7f8c8d; font-size: 0.9em; margin-top: 10px;">
         Point your camera at the lecturer's screen.
       </p>
@@ -104,7 +103,7 @@
       </button>
     </div>
 
-    <div id="success-section">
+    <div id="success-section" style="text-align: center; padding: 20px;">
       <div class="success-icon">✅</div>
       <h2 class="success-title">Success!</h2>
       <p class="success-text">
