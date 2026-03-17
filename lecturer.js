@@ -14,14 +14,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 1. Live Dashboard Logic - (Updated to remove Course column)
+// 1. Live Dashboard Logic
 window.addEventListener('load', () => {
     const tableBody = document.getElementById("attendanceBody");
     const q = query(collection(db, "attendance"), orderBy("timestamp", "desc"));
 
     onSnapshot(q, (snapshot) => {
         if (!tableBody) return;
-        tableBody.innerHTML = ""; // Clear the body
+        tableBody.innerHTML = "";
         snapshot.forEach((doc) => {
             const data = doc.data();
             tableBody.innerHTML += `
@@ -29,44 +29,62 @@ window.addEventListener('load', () => {
                     <td>${data.name || 'N/A'}</td>
                     <td>${data.studentID || 'N/A'}</td>
                     <td>${data.time || 'N/A'}</td>
-                </tr>`; // Course data removed here
+                </tr>`;
         });
     });
 });
 
-// 2. QR Generation - (Updated to remove Advanced AI data)
+// 2. NEW: Refreshing QR Generation (Every 15 Seconds)
+let qrInterval;
+
 window.generateQR = function() {
     const qrDiv = document.getElementById("qrcode");
     if (!qrDiv) return;
-    qrDiv.innerHTML = "";
 
-    const githubStudentUrl = "https://mieshal-alkharji.github.io/attendance-system/student.html";
+    // Clear any existing timer to avoid multiple QRs fighting each other
+    if (qrInterval) clearInterval(qrInterval);
 
-    // Only sending necessary flags to the student page
-    const sessionData = {
-        isAttendanceQR: true
+    // Function to create the actual QR
+    const createTokenizedQR = () => {
+        qrDiv.innerHTML = "";
+
+        // This number changes exactly every 15 seconds
+        const timeBlock = Math.floor(Date.now() / 15000);
+        const githubStudentUrl = "https://mieshal-alkharji.github.io/attendance-system/student.html";
+
+        // Add the timeBlock to the data so the student's phone knows when it was made
+        const sessionData = {
+            isAttendanceQR: true,
+            t: timeBlock
+        };
+
+        const finalUrl = `${githubStudentUrl}?data=${encodeURIComponent(JSON.stringify(sessionData))}`;
+
+        if (typeof QRCode !== "undefined") {
+            new QRCode(qrDiv, {
+                text: finalUrl,
+                width: 220,
+                height: 220,
+                colorDark : "#2c3e50",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+            console.log("New QR Generated. Block:", timeBlock);
+        }
     };
 
-    const finalUrl = `${githubStudentUrl}?data=${encodeURIComponent(JSON.stringify(sessionData))}`;
+    // Run once immediately
+    createTokenizedQR();
 
-    if (typeof QRCode !== "undefined") {
-        new QRCode(qrDiv, {
-            text: finalUrl,
-            width: 220,
-            height: 220,
-            colorDark : "#2c3e50",
-            correctLevel : QRCode.CorrectLevel.H
-        });
-        console.log("QR Generated (Simplified)");
-    } else {
-        alert("QR Library missing!");
-    }
+    // Then repeat every 15 seconds
+    qrInterval = setInterval(createTokenizedQR, 15000);
+
+    alert("Smart QR Started: Code will refresh every 15 seconds to prevent cheating.");
 };
 
-// 3. Download CSV - (Updated to remove Course column)
+// 3. Download CSV
 window.downloadCSV = async function() {
     const querySnapshot = await getDocs(collection(db, "attendance"));
-    let csv = "Student Name,Student ID,Time\n"; // Header updated
+    let csv = "Student Name,Student ID,Time\n";
     querySnapshot.forEach(doc => {
         const d = doc.data();
         csv += `${d.name},${d.studentID},${d.time}\n`;
