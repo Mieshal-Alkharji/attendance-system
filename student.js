@@ -16,6 +16,7 @@ const db = getFirestore(app);
 
 let sessionInfo = null;
 
+// 1. Initial Load and QR Validation
 window.addEventListener('load', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const dataParam = urlParams.get('data');
@@ -23,14 +24,14 @@ window.addEventListener('load', () => {
         try {
             sessionInfo = JSON.parse(decodeURIComponent(dataParam));
 
-            // --- NEW: TIME VALIDATION ---
-            const currentTimeBlock = Math.floor(Date.now() / 15000);
+            // --- TIME VALIDATION (Anti-Proxy Check) ---
+            const currentTimeBlock = Math.floor(Date.now() / 15000); // 15-second block
             const scannedTimeBlock = sessionInfo.t;
 
-            // Allow a 1-block grace period (15 seconds) for network lag
+            // Block access if the QR is older than 15-30 seconds
             if (Math.abs(currentTimeBlock - scannedTimeBlock) > 1) {
-                alert("❌ QR Code Expired! Please scan the new code on the lecturer's screen.");
-                window.location.href = "student.html"; // Redirect back to scanner
+                alert("❌ QR Code Expired! Please scan the live code on the lecturer's screen.");
+                window.location.href = "student.html";
                 return;
             }
 
@@ -42,9 +43,11 @@ window.addEventListener('load', () => {
     }
 });
 
+// 2. Attendance Submission Logic
 window.submitAttendance = async function() {
     const nameField = document.getElementById("inputName");
     const idField = document.getElementById("inputID");
+    const submitBtn = document.getElementById("submitBtn");
 
     const inputName = nameField.value.trim().toLowerCase();
     const inputID = idField.value.trim();
@@ -53,13 +56,17 @@ window.submitAttendance = async function() {
         return alert("Please enter both Name and ID");
     }
 
-    // --- RE-CHECK TIME ON SUBMISSION (Double Security) ---
+    // --- RE-CHECK TIME (Ensure they didn't wait too long to type) ---
     const currentTimeBlock = Math.floor(Date.now() / 15000);
-    if (sessionInfo && Math.abs(currentTimeBlock - sessionInfo.t) > 5) { // 5 blocks = 75 seconds max window
+    if (sessionInfo && Math.abs(currentTimeBlock - sessionInfo.t) > 10) {
         return alert("❌ Session timed out. Please re-scan the live QR code.");
     }
 
     try {
+        // Disable button to prevent double-clicks
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Verifying...";
+
         const studentsRef = collection(db, "Auto-ID");
         const querySnapshot = await getDocs(studentsRef);
 
@@ -78,21 +85,27 @@ window.submitAttendance = async function() {
         });
 
         if (!matched) {
-            return alert("❌ Student not found. Please re-check the spelling or ID.");
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Submit Attendance";
+            return alert("❌ Student not found. Please check spelling or Student ID.");
         }
 
+        // --- SAVE TO FIREBASE ---
         await addDoc(collection(db, "attendance"), {
             name: officialName,
             studentID: inputID,
             time: new Date().toLocaleTimeString(),
             timestamp: Date.now(),
-            verification: "Secure QR" // Note for the lecturer
+            verification: "Secure QR (15s)"
         });
 
-        alert("✅ Success! Attendance recorded.");
-        window.location.href = "student.html";
+        // --- SUCCESS UI TRANSITION (SPA Style) ---
+        document.getElementById("form-section").style.display = "none";
+        document.getElementById("success-section").style.display = "block";
 
     } catch (e) {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Submit Attendance";
         alert("Error: " + e.message);
     }
 };
