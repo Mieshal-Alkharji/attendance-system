@@ -18,7 +18,6 @@ const db = getFirestore(app);
 window.addEventListener('load', () => {
     const tableBody = document.getElementById("attendanceBody");
     const q = query(collection(db, "attendance"), orderBy("timestamp", "desc"));
-
     onSnapshot(q, (snapshot) => {
         if (!tableBody) return;
         tableBody.innerHTML = "";
@@ -40,21 +39,15 @@ window.generateQR = function() {
     const qrDiv = document.getElementById("qrcode");
     if (!qrDiv) return;
     if (qrInterval) clearInterval(qrInterval);
-
     const createTokenizedQR = () => {
         qrDiv.innerHTML = "";
         const timeBlock = Math.floor(Date.now() / 15000);
         const githubStudentUrl = "https://mieshal-alkharji.github.io/attendance-system/student.html";
         const sessionData = { isAttendanceQR: true, t: timeBlock };
         const finalUrl = `${githubStudentUrl}?data=${encodeURIComponent(JSON.stringify(sessionData))}`;
-
         if (typeof QRCode !== "undefined") {
             new QRCode(qrDiv, {
-                text: finalUrl,
-                width: 220,
-                height: 220,
-                colorDark : "#2c3e50",
-                correctLevel : QRCode.CorrectLevel.H
+                text: finalUrl, width: 220, height: 220, colorDark : "#2c3e50", correctLevel : QRCode.CorrectLevel.H
             });
         }
     };
@@ -63,58 +56,55 @@ window.generateQR = function() {
     alert("Smart QR Started: Refreshing every 15 seconds.");
 };
 
-// 3. DOWNLOAD CSV - THE FIXED VERSION
+// 3. THE FINAL FIXED DOWNLOAD CSV
 window.downloadCSV = async function() {
     try {
-        console.log("Starting CSV Generation...");
         const querySnapshot = await getDocs(collection(db, "attendance"));
         
-        // Ensure the Header has the Date column
-        let csv = "Date,Student Name,Student ID,Time\n";
+        // Ensure "Date" is the very first thing in the header string
+        let csvContent = "Date,Student Name,Student ID,Time\n";
         
         querySnapshot.forEach(doc => {
             const d = doc.data();
             
-            // LOGIC: Check if timestamp exists, otherwise use today's date
-            let displayDate = "";
+            // Try to get date from timestamp, if not, use today's date string
+            let rowDate = "";
             if (d.timestamp) {
-                displayDate = new Date(d.timestamp).toLocaleDateString();
+                const dateObj = new Date(d.timestamp);
+                rowDate = dateObj.getFullYear() + "-" + (dateObj.getMonth() + 1) + "-" + dateObj.getDate();
             } else {
-                displayDate = new Date().toLocaleDateString(); // Fallback to now
+                const now = new Date();
+                rowDate = now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
             }
             
-            // Clean data to remove commas that break CSV structure
-            const cleanName = (d.name || "N/A").replace(/,/g, "");
-            const cleanID = (d.studentID || "N/A").replace(/,/g, "");
-            const cleanTime = (d.time || "N/A").replace(/,/g, "");
+            const name = (d.name || "N/A").replace(/,/g, "");
+            const id = (d.studentID || "N/A").replace(/,/g, "");
+            const time = (d.time || "N/A").replace(/,/g, "");
 
-            // Add the row to the CSV string
-            csv += `${displayDate},${cleanName},${cleanID},${cleanTime}\n`;
+            // Combine into a CSV row
+            csvContent += `${rowDate},${name},${id},${time}\n`;
         });
 
-        // Trigger the download
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
+        // Use a more robust download method
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
         
-        const todayFile = new Date().toISOString().split('T')[0];
         link.setAttribute("href", url);
-        link.setAttribute("download", `Attendance_Report_${todayFile}.csv`);
-        link.style.visibility = 'hidden';
+        link.setAttribute("download", "Attendance_Report_Final.csv");
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         
-        console.log("CSV Downloaded!");
     } catch (error) {
-        console.error("Error generating CSV:", error);
-        alert("Failed to export. Check your internet or console.");
+        console.error("CSV Error:", error);
+        alert("Download failed. See console.");
     }
 };
 
 // 4. Clear Records
 window.clearRecords = async function() {
-    if(confirm("Delete all attendance data? This cannot be undone.")) {
+    if(confirm("Delete all data?")) {
         const querySnapshot = await getDocs(collection(db, "attendance"));
         for (const docSnap of querySnapshot.docs) {
             await deleteDoc(docSnap.ref);
