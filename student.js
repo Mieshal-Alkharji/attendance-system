@@ -22,6 +22,18 @@ window.addEventListener('load', () => {
     if (dataParam) {
         try {
             sessionInfo = JSON.parse(decodeURIComponent(dataParam));
+
+            // --- NEW: TIME VALIDATION ---
+            const currentTimeBlock = Math.floor(Date.now() / 15000);
+            const scannedTimeBlock = sessionInfo.t;
+
+            // Allow a 1-block grace period (15 seconds) for network lag
+            if (Math.abs(currentTimeBlock - scannedTimeBlock) > 1) {
+                alert("❌ QR Code Expired! Please scan the new code on the lecturer's screen.");
+                window.location.href = "student.html"; // Redirect back to scanner
+                return;
+            }
+
             const scannerSection = document.getElementById("scanner-section");
             const formSection = document.getElementById("form-section");
             if (scannerSection) scannerSection.style.display = "none";
@@ -34,7 +46,6 @@ window.submitAttendance = async function() {
     const nameField = document.getElementById("inputName");
     const idField = document.getElementById("inputID");
 
-    // Clean user input
     const inputName = nameField.value.trim().toLowerCase();
     const inputID = idField.value.trim();
 
@@ -42,36 +53,40 @@ window.submitAttendance = async function() {
         return alert("Please enter both Name and ID");
     }
 
+    // --- RE-CHECK TIME ON SUBMISSION (Double Security) ---
+    const currentTimeBlock = Math.floor(Date.now() / 15000);
+    if (sessionInfo && Math.abs(currentTimeBlock - sessionInfo.t) > 5) { // 5 blocks = 75 seconds max window
+        return alert("❌ Session timed out. Please re-scan the live QR code.");
+    }
+
     try {
         const studentsRef = collection(db, "Auto-ID");
         const querySnapshot = await getDocs(studentsRef);
 
         let matched = false;
+        let officialName = "";
 
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-
-            // SUPER CLEAN: Convert everything to a string, trim it, and lowercase it
             const dbName = String(data.name || "").replace(/\s+/g, ' ').trim().toLowerCase();
             const dbID = String(data.studentID || "").trim();
 
-            // Debugging console (Check your browser inspect tool if this fails)
-            console.log(`Checking: DB Name [${dbName}] against Input [${inputName}]`);
-
             if (dbName === inputName && dbID === inputID) {
                 matched = true;
+                officialName = data.name;
             }
         });
 
         if (!matched) {
-            return alert("❌ Still not found. Please re-check the spelling in Firebase.");
+            return alert("❌ Student not found. Please re-check the spelling or ID.");
         }
 
         await addDoc(collection(db, "attendance"), {
-            name: nameField.value.trim(),
+            name: officialName,
             studentID: inputID,
             time: new Date().toLocaleTimeString(),
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            verification: "Secure QR" // Note for the lecturer
         });
 
         alert("✅ Success! Attendance recorded.");
