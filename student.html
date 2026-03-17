@@ -6,8 +6,9 @@
   <title>Student Portal | SmartCheck</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://unpkg.com/html5-qrcode"></script>
+
   <style>
-    /* Styling for the new Course Header */
+    /* Styling for the Course Header */
     #courseNameDisplay {
       background: #ecf0f1;
       padding: 10px;
@@ -40,14 +41,30 @@
       outline: none;
     }
 
-    /* Initially hidden until the link is opened or scan is done */
-    #form-section {
+    /* Sections initially hidden */
+    #form-section, #success-section {
       display: none;
-      animation: fadeIn 0.5s;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    /* Success Section Specific Styling */
+    .success-icon {
+      font-size: 60px;
+      color: #27ae60;
+      margin-bottom: 15px;
+    }
+    .success-title {
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+    .success-text {
+      color: #7f8c8d;
+      margin-bottom: 25px;
+      line-height: 1.5;
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
+      from { opacity: 0; transform: translateY(15px); }
       to { opacity: 1; transform: translateY(0); }
     }
   </style>
@@ -79,11 +96,23 @@
 
       <div class="input-group">
         <label for="inputID">Student ID Number</label>
-        <input type="number" id="inputID" class="styled-input" placeholder="e.g. 1122">
+        <input type="text" id="inputID" class="styled-input" placeholder="e.g. 0001">
       </div>
 
-      <button onclick="submitAttendance()" style="width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer;">
+      <button id="submitBtn" onclick="submitAttendance()" style="width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer;">
         Submit Attendance
+      </button>
+    </div>
+
+    <div id="success-section">
+      <div class="success-icon">✅</div>
+      <h2 class="success-title">Success!</h2>
+      <p class="success-text">
+        Your attendance has been officially recorded.<br>
+        You may now close this page.
+      </p>
+      <button onclick="window.location.href='student.html'" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+        Back to Scanner
       </button>
     </div>
 
