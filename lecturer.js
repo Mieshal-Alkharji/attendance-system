@@ -14,7 +14,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 1. Live Dashboard Logic - (Updates table view)
+// 1. Live Dashboard Logic
 window.addEventListener('load', () => {
     const tableBody = document.getElementById("attendanceBody");
     const q = query(collection(db, "attendance"), orderBy("timestamp", "desc"));
@@ -36,23 +36,16 @@ window.addEventListener('load', () => {
 
 // 2. Refreshing QR Generation (Every 15 Seconds)
 let qrInterval;
-
 window.generateQR = function() {
     const qrDiv = document.getElementById("qrcode");
     if (!qrDiv) return;
-
     if (qrInterval) clearInterval(qrInterval);
 
     const createTokenizedQR = () => {
         qrDiv.innerHTML = "";
         const timeBlock = Math.floor(Date.now() / 15000);
         const githubStudentUrl = "https://mieshal-alkharji.github.io/attendance-system/student.html";
-
-        const sessionData = {
-            isAttendanceQR: true,
-            t: timeBlock
-        };
-
+        const sessionData = { isAttendanceQR: true, t: timeBlock };
         const finalUrl = `${githubStudentUrl}?data=${encodeURIComponent(JSON.stringify(sessionData))}`;
 
         if (typeof QRCode !== "undefined") {
@@ -63,52 +56,59 @@ window.generateQR = function() {
                 colorDark : "#2c3e50",
                 correctLevel : QRCode.CorrectLevel.H
             });
-            console.log("New QR Generated. Block:", timeBlock);
         }
     };
-
     createTokenizedQR();
     qrInterval = setInterval(createTokenizedQR, 15000);
-    alert("Smart QR Started: Code will refresh every 15 seconds.");
+    alert("Smart QR Started: Refreshing every 15 seconds.");
 };
 
-// 3. Download CSV - (Updated to include the Date)
+// 3. DOWNLOAD CSV - THE FIXED VERSION
 window.downloadCSV = async function() {
     try {
+        console.log("Starting CSV Generation...");
         const querySnapshot = await getDocs(collection(db, "attendance"));
         
-        // CSV Headers with Date included
+        // Ensure the Header has the Date column
         let csv = "Date,Student Name,Student ID,Time\n";
         
         querySnapshot.forEach(doc => {
             const d = doc.data();
             
-            // Format the date from the timestamp
-            const fullDate = d.timestamp ? new Date(d.timestamp).toLocaleDateString() : new Date().toLocaleDateString();
+            // LOGIC: Check if timestamp exists, otherwise use today's date
+            let displayDate = "";
+            if (d.timestamp) {
+                displayDate = new Date(d.timestamp).toLocaleDateString();
+            } else {
+                displayDate = new Date().toLocaleDateString(); // Fallback to now
+            }
             
-            // Clean strings to ensure no commas break the CSV columns
+            // Clean data to remove commas that break CSV structure
             const cleanName = (d.name || "N/A").replace(/,/g, "");
             const cleanID = (d.studentID || "N/A").replace(/,/g, "");
             const cleanTime = (d.time || "N/A").replace(/,/g, "");
 
-            csv += `${fullDate},${cleanName},${cleanID},${cleanTime}\n`;
+            // Add the row to the CSV string
+            csv += `${displayDate},${cleanName},${cleanID},${cleanTime}\n`;
         });
 
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
+        // Trigger the download
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
         
-        // Name the file with today's date
-        const todayStr = new Date().toISOString().split('T')[0];
-        a.href = url;
-        a.download = `Attendance_Report_${todayStr}.csv`;
+        const todayFile = new Date().toISOString().split('T')[0];
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Attendance_Report_${todayFile}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
         
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        console.log("CSV Downloaded!");
     } catch (error) {
         console.error("Error generating CSV:", error);
-        alert("Failed to export data.");
+        alert("Failed to export. Check your internet or console.");
     }
 };
 
