@@ -17,7 +17,7 @@ const firebaseConfig = {
     measurementId: "G-8VBJE6LDTY"
 };
 
-// Initialize Firebase SDKs
+// Initialise Firebase SDKs
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -38,7 +38,7 @@ window.addEventListener('load', () => {
 
         snapshot.forEach((doc) => {
             const data = doc.data();
-            // Dynamically inject table rows with sanitized student data
+            // Dynamically inject table rows with sanitised student data
             tableBody.innerHTML += `
                 <tr>
                     <td>${data.name || 'N/A'}</td>
@@ -51,7 +51,7 @@ window.addEventListener('load', () => {
 
 /**
  * 2. SECURE DYNAMIC QR GENERATION
- * Generates a "Time-Tokenized" QR code that refreshes every 15 seconds.
+ * Generates a "Time-Tokenised" QR code that refreshes every 15 seconds.
  * This prevents students from taking a photo of the QR code and sharing it with absent peers.
  */
 let qrInterval;
@@ -73,7 +73,7 @@ window.generateQR = function() {
         const sessionData = { isAttendanceQR: true, t: timeBlock };
         const finalUrl = `${githubStudentUrl}?data=${encodeURIComponent(JSON.stringify(sessionData))}`;
 
-        // Initialize QRCode library with high-error correction for easy scanning
+        // Initialise QRCode library with high-error correction for easy scanning
         if (typeof QRCode !== "undefined") {
             new QRCode(qrDiv, {
                 text: finalUrl,
@@ -100,7 +100,7 @@ window.downloadCSV = async function() {
     try {
         const querySnapshot = await getDocs(collection(db, "attendance"));
 
-        // Initialize CSV header structure
+        // Initialise CSV header structure
         let csvContent = "Date,Student Name,Student ID,Time\n";
 
         querySnapshot.forEach(doc => {
@@ -116,7 +116,7 @@ window.downloadCSV = async function() {
                 rowDate = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
             }
 
-            // Data sanitization: Remove any commas from names to prevent CSV formatting errors
+            // Data sanitisation: Remove any commas from names to prevent CSV formatting errors
             const name = (d.name || "N/A").replace(/,/g, "");
             const id = (d.studentID || "N/A").replace(/,/g, "");
             const time = (d.time || "N/A").replace(/,/g, "");
