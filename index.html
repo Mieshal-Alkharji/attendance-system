@@ -2,22 +2,31 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SmartCheck | Login</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
 <div class="container">
   <div class="card">
     <h2>System Login</h2>
     <p>Please enter your credentials</p>
+
     <div class="login-form">
       <input type="text" id="loginName" placeholder="Full Name" class="form-input">
       <input type="text" id="loginID" placeholder="ID Number" class="form-input">
-      <button onclick="attemptLogin()">Login</button>
+
+      <button onclick="attemptLogin()" style="width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px;">
+        Login
+      </button>
     </div>
-    <p id="error-msg" style="color: red; margin-top: 10px;"></p>
+
+    <p id="error-msg" style="color: #e74c3c; margin-top: 15px; font-weight: bold;"></p>
   </div>
 </div>
-<script src="auth.js"></script>
+
+<script type="module" src="login.js"></script>
+
 </body>
 </html>
