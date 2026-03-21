@@ -18,7 +18,7 @@ const firebaseConfig = {
     measurementId: "G-8VBJE6LDTY"
 };
 
-// Initialize Firebase services
+// Initialise Firebase services
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -59,13 +59,13 @@ window.attemptLogin = async function() {
             const userData = querySnapshot.docs[0].data();
 
             /** * Persistence: Save user details in LocalStorage.
-             * This allows other pages (lecturer.html/student.html) to personalize
+             * This allows other pages (lecturer.html/student.html) to personalise
              * the experience without re-fetching from the database.
              */
             localStorage.setItem("currentUser", JSON.stringify(userData));
 
             /** * Data Normalization:
-             * We sanitize the 'role' string by converting it to lowercase and removing
+             * We sanitise the 'role' string by converting it to lowercase and removing
              * any hidden spaces. This prevents login failures due to database entry typos.
              */
             const rawRole = userData.role || userData.Role || "student";
