@@ -17,7 +17,7 @@ const firebaseConfig = {
     measurementId: "G-8VBJE6LDTY"
 };
 
-// Initialize Firebase services
+// Initialise Firebase services
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -40,7 +40,7 @@ window.addEventListener('load', () => {
 
             /** * TIME-WINDOW VALIDATION:
              * We calculate a 15-second 'Time Block' to compare against the QR token.
-             * If the discrepancy is >1 block, the QR is considered stale/unauthorized.
+             * If the discrepancy is >1 block, the QR is considered stale/unauthorised.
              */
             const currentTimeBlock = Math.floor(Date.now() / 15000);
             const scannedTimeBlock = sessionInfo.t;
@@ -73,7 +73,7 @@ window.submitAttendance = async function() {
     const idField = document.getElementById("inputID");
     const submitBtn = document.getElementById("submitBtn");
 
-    // Sanitize input to ensure case-insensitive matching
+    // Sanitise input to ensure case-insensitive matching
     const inputName = nameField.value.trim().toLowerCase();
     const inputID = idField.value.trim();
 
