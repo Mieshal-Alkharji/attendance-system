@@ -29,8 +29,6 @@ window.attemptLogin = async function() {
     loginBtn.disabled = true;
 
     try {
-        // 1. Search Firebase for the user
-        // Note: Field name 'studentID' must match your Firebase exactly
         const q = query(
             collection(db, "Auto-ID"),
             where("name", "==", nameInput),
@@ -42,30 +40,28 @@ window.attemptLogin = async function() {
         if (!querySnapshot.empty) {
             const userData = querySnapshot.docs[0].data();
             
-            // Save to localStorage so student.js can use it later
+            // This alert will tell us exactly what is wrong
+            const foundRole = userData.role || "NOT FOUND";
+            alert("Firebase says the role is: " + foundRole);
+
             localStorage.setItem("currentUser", JSON.stringify(userData));
 
-            // 2. CLEAN THE ROLE: Convert to lowercase and remove spaces
-            // This prevents errors if Firebase has "Lecturer" or "lecturer "
-            const userRole = (userData.role || "student").toString().trim().toLowerCase();
+            // Normalize and Check
+            const cleanRole = foundRole.toString().trim().toLowerCase();
 
-            console.log("Login successful. Role detected:", userRole);
-
-            // 3. REDIRECT
-            if (userRole === "lecturer") {
+            if (cleanRole === "lecturer") {
                 window.location.href = "lecturer.html";
             } else {
                 window.location.href = "student.html";
             }
         } else {
-            errorMsg.innerText = "Invalid Name or ID. Access Denied.";
+            errorMsg.innerText = "Invalid Name or ID.";
             loginBtn.innerText = "Login";
             loginBtn.disabled = false;
         }
 
     } catch (error) {
-        console.error("Login Error:", error);
-        errorMsg.innerText = "Connection error. Check console.";
+        alert("System Error: " + error.message);
         loginBtn.innerText = "Login";
         loginBtn.disabled = false;
     }
