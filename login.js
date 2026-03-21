@@ -25,18 +25,11 @@ window.attemptLogin = async function() {
         return;
     }
 
-    // Show loading state
     loginBtn.innerText = "Verifying...";
     loginBtn.disabled = true;
 
     try {
-        // 1. Check if the user is the Admin/Lecturer first
-        if (nameInput === "Admin" && idInput === "1234") {
-            window.location.href = "lecturer.html";
-            return;
-        }
-
-        // 2. Search Firebase "Auto-ID" collection for the student
+        // Search Firebase "Auto-ID" collection for the user
         const q = query(
             collection(db, "Auto-ID"),
             where("name", "==", nameInput),
@@ -46,12 +39,22 @@ window.attemptLogin = async function() {
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
-            // Success! Save to localStorage and redirect
-            const studentData = querySnapshot.docs[0].data();
-            localStorage.setItem("currentUser", JSON.stringify(studentData));
-            window.location.href = "student.html";
+            // User found! Get their data
+            const userData = querySnapshot.docs[0].data();
+            
+            // Save user info to local storage
+            localStorage.setItem("currentUser", JSON.stringify(userData));
+
+            // ROLE-BASED REDIRECTION
+            if (userData.role === "lecturer") {
+                console.log("Lecturer detected, redirecting...");
+                window.location.href = "lecturer.html";
+            } else {
+                console.log("Student detected, redirecting...");
+                window.location.href = "student.html";
+            }
         } else {
-            errorMsg.innerText = "Invalid Student Name or ID. Please check with your Lecturer.";
+            errorMsg.innerText = "Invalid Name or ID. Access Denied.";
             loginBtn.innerText = "Login";
             loginBtn.disabled = false;
         }
@@ -59,6 +62,7 @@ window.attemptLogin = async function() {
     } catch (error) {
         console.error("Login Error:", error);
         errorMsg.innerText = "Connection error. Try again.";
+        loginBtn.innerText = "Login";
         loginBtn.disabled = false;
     }
 };
