@@ -29,11 +29,12 @@ window.attemptLogin = async function() {
     loginBtn.disabled = true;
 
     try {
-        // We use "studentID" here because that is what you named it in Firebase
+        // 1. Search Firebase for the user
+        // Note: Field name 'studentID' must match your Firebase exactly
         const q = query(
             collection(db, "Auto-ID"),
             where("name", "==", nameInput),
-            where("studentID", "==", idInput) 
+            where("studentID", "==", idInput)
         );
 
         const querySnapshot = await getDocs(q);
@@ -41,24 +42,30 @@ window.attemptLogin = async function() {
         if (!querySnapshot.empty) {
             const userData = querySnapshot.docs[0].data();
             
-            // Save user info so other pages know who is logged in
+            // Save to localStorage so student.js can use it later
             localStorage.setItem("currentUser", JSON.stringify(userData));
 
-            // Redirect based on the "role" field in Firebase
-            if (userData.role === "lecturer") {
+            // 2. CLEAN THE ROLE: Convert to lowercase and remove spaces
+            // This prevents errors if Firebase has "Lecturer" or "lecturer "
+            const userRole = (userData.role || "student").toString().trim().toLowerCase();
+
+            console.log("Login successful. Role detected:", userRole);
+
+            // 3. REDIRECT
+            if (userRole === "lecturer") {
                 window.location.href = "lecturer.html";
             } else {
                 window.location.href = "student.html";
             }
         } else {
-            errorMsg.innerText = "Invalid Name or ID.";
+            errorMsg.innerText = "Invalid Name or ID. Access Denied.";
             loginBtn.innerText = "Login";
             loginBtn.disabled = false;
         }
 
     } catch (error) {
         console.error("Login Error:", error);
-        errorMsg.innerText = "Connection error.";
+        errorMsg.innerText = "Connection error. Check console.";
         loginBtn.innerText = "Login";
         loginBtn.disabled = false;
     }
