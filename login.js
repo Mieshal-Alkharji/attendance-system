@@ -29,39 +29,36 @@ window.attemptLogin = async function() {
     loginBtn.disabled = true;
 
     try {
-        // Search Firebase "Auto-ID" collection for the user
+        // We use "studentID" here because that is what you named it in Firebase
         const q = query(
             collection(db, "Auto-ID"),
             where("name", "==", nameInput),
-            where("id", "==", idInput)
+            where("studentID", "==", idInput) 
         );
 
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
-            // User found! Get their data
             const userData = querySnapshot.docs[0].data();
             
-            // Save user info to local storage
+            // Save user info so other pages know who is logged in
             localStorage.setItem("currentUser", JSON.stringify(userData));
 
-            // ROLE-BASED REDIRECTION
+            // Redirect based on the "role" field in Firebase
             if (userData.role === "lecturer") {
-                console.log("Lecturer detected, redirecting...");
                 window.location.href = "lecturer.html";
             } else {
-                console.log("Student detected, redirecting...");
                 window.location.href = "student.html";
             }
         } else {
-            errorMsg.innerText = "Invalid Name or ID. Access Denied.";
+            errorMsg.innerText = "Invalid Name or ID.";
             loginBtn.innerText = "Login";
             loginBtn.disabled = false;
         }
 
     } catch (error) {
         console.error("Login Error:", error);
-        errorMsg.innerText = "Connection error. Try again.";
+        errorMsg.innerText = "Connection error.";
         loginBtn.innerText = "Login";
         loginBtn.disabled = false;
     }
