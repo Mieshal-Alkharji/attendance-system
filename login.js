@@ -40,28 +40,28 @@ window.attemptLogin = async function() {
         if (!querySnapshot.empty) {
             const userData = querySnapshot.docs[0].data();
             
-            // This alert will tell us exactly what is wrong
-            const foundRole = userData.role || "NOT FOUND";
-            alert("Firebase says the role is: " + foundRole);
-
+            // Store user info
             localStorage.setItem("currentUser", JSON.stringify(userData));
 
-            // Normalize and Check
-            const cleanRole = foundRole.toString().trim().toLowerCase();
+            // Normalize role
+            const rawRole = userData.role || userData.Role || "student";
+            const cleanRole = rawRole.toString().toLowerCase().replace(/\s/g, '');
 
+            // Redirect
             if (cleanRole === "lecturer") {
                 window.location.href = "lecturer.html";
             } else {
                 window.location.href = "student.html";
             }
         } else {
-            errorMsg.innerText = "Invalid Name or ID.";
+            errorMsg.innerText = "Invalid Name or ID. Access Denied.";
             loginBtn.innerText = "Login";
             loginBtn.disabled = false;
         }
 
     } catch (error) {
-        alert("System Error: " + error.message);
+        console.error("Login Error:", error);
+        errorMsg.innerText = "Connection error.";
         loginBtn.innerText = "Login";
         loginBtn.disabled = false;
     }
