@@ -4,11 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Student Portal | SmartCheck</title>
+
   <link rel="stylesheet" href="style.css">
+
   <script src="https://unpkg.com/html5-qrcode"></script>
 
   <style>
-    /* Styling for the Course Header */
+    /* PAGE-SPECIFIC UI COMPONENTS:
+       Scoped styles for the dynamic transitions and form elements.
+    */
     #courseNameDisplay {
       background: #ecf0f1;
       padding: 10px;
@@ -22,12 +26,14 @@
       margin-bottom: 20px;
       text-align: left;
     }
+
     .input-group label {
       display: block;
       font-weight: bold;
       margin-bottom: 8px;
       color: #34495e;
     }
+
     .styled-input {
       width: 100%;
       padding: 12px;
@@ -36,32 +42,29 @@
       font-size: 16px;
       box-sizing: border-box;
     }
+
     .styled-input:focus {
       border-color: #3498db;
       outline: none;
     }
 
-    /* Sections initially hidden until JS triggers them */
+    /* SECTION CONTROL:
+       We use 'display: none' as the default state for the form and success message.
+       JavaScript (student.js) will toggle these based on the QR validation state.
+    */
     #form-section, #success-section {
       display: none;
       animation: fadeIn 0.5s ease-in-out;
     }
 
+    /* VISUAL FEEDBACK: Styles for the successful check-in state */
     .success-icon {
       font-size: 60px;
       color: #27ae60;
       margin-bottom: 15px;
     }
-    .success-title {
-      color: #2c3e50;
-      margin-bottom: 10px;
-    }
-    .success-text {
-      color: #7f8c8d;
-      margin-bottom: 25px;
-      line-height: 1.5;
-    }
 
+    /* ANIMATIONS: Enhances the User Experience (UX) with smooth transitions */
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(15px); }
       to { opacity: 1; transform: translateY(0); }
@@ -81,25 +84,25 @@
       <h3>Scan Class QR Code</h3>
       <div id="reader" style="width: 100%; border-radius: 10px; overflow: hidden; background: #f9f9f9;"></div>
       <p style="color: #7f8c8d; font-size: 0.9em; margin-top: 10px;">
-        Point your camera at the lecturer's screen.
+        Point your camera at the lecturer's screen to begin.
       </p>
     </div>
 
     <div id="form-section">
-      <h3 id="courseNameDisplay">Registering Attendance...</h3>
+      <h3 id="courseNameDisplay">Verifying Session...</h3>
 
       <div class="input-group">
         <label for="inputName">Full Name</label>
-        <input type="text" id="inputName" class="styled-input" placeholder="Enter your name">
+        <input type="text" id="inputName" class="styled-input" placeholder="Enter your registered name">
       </div>
 
       <div class="input-group">
         <label for="inputID">Student ID Number</label>
-        <input type="text" id="inputID" class="styled-input" placeholder="Enter your ID number">
+        <input type="text" id="inputID" class="styled-input" placeholder="Enter your official ID">
       </div>
 
       <button id="submitBtn" onclick="submitAttendance()" style="width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer;">
-        Submit Attendance
+        Confirm Presence
       </button>
     </div>
 
@@ -107,8 +110,8 @@
       <div class="success-icon">✅</div>
       <h2 class="success-title">Success!</h2>
       <p class="success-text">
-        Your attendance has been officially recorded.<br>
-        You may now close this page.
+        Your attendance has been officially verified and recorded.<br>
+        You may now safely close this window.
       </p>
     </div>
 
